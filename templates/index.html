@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViralClipper — YouTube → TikTok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0f;
+    --surface: #0f1318;
+    --surface2: #141920;
+    --border: #1e2530;
+    --accent: #ff3c5a;
+    --accent2: #ff8c00;
+    --tiktok: #69c9d0;
+    --text: #e8eaf0;
+    --muted: #5a6478;
+    --green: #00e676;
+    --sub-yellow: #ffe033;
+    --sub-cyan: #69c9d0;
+    --sub-white: #ffffff;
+    --sub-green: #00e676;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,60,90,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,60,90,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Header */
+  header { padding: 40px 0 28px; display: flex; align-items: center; gap: 20px; }
+  .logo-mark {
+    width: 52px; height: 52px; background: var(--accent); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+    box-shadow: 0 0 40px rgba(255,60,90,0.4); flex-shrink: 0;
+  }
+  .logo-text h1 { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; line-height: 1; }
+  .logo-text p { font-size: 13px; color: var(--muted); letter-spacing: 0.5px; margin-top: 3px; }
+  .badge {
+    margin-left: auto; padding: 6px 14px;
+    background: rgba(105,201,208,0.1); border: 1px solid rgba(105,201,208,0.3);
+    border-radius: 999px; font-size: 12px; color: var(--tiktok); font-weight: 500;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 32px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  label.field-label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+    letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 9px;
+  }
+  .url-input {
+    width: 100%;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: var(--accent); }
+  .url-input::placeholder { color: var(--muted); }
+
+  .options-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    outline: none; cursor: pointer; transition: border-color 0.2s;
+  }
+  select:focus { border-color: var(--accent); }
+
+  .range-wrap { display: flex; align-items: center; gap: 12px; }
+  .range-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); min-width: 50px; font-weight: 600; }
+  input[type=range] {
+    flex: 1; padding: 0; height: 4px; border-radius: 999px;
+    appearance: none; background: var(--border); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 18px; height: 18px; background: var(--accent);
+    border-radius: 50%; cursor: pointer; box-shadow: 0 0 12px rgba(255,60,90,0.5);
+  }
+
+  /* ── Subtitle Panel ── */
+  .sub-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .sub-toggle-label {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sub-toggle-label span { font-weight: 600; font-size: 15px; }
+  .sub-badge-ai {
+    padding: 3px 9px; background: rgba(255,60,90,0.15);
+    border: 1px solid rgba(255,60,90,0.35); border-radius: 999px;
+    font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px;
+  }
+  .toggle-switch {
+    position: relative; width: 48px; height: 26px; cursor: pointer;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0; background: var(--border);
+    border-radius: 999px; transition: background 0.25s;
+  }
+  .toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--muted); transition: all 0.25s;
+  }
+  .toggle-switch input:checked ~ .toggle-track { background: var(--accent); }
+  .toggle-switch input:checked ~ .toggle-thumb { left: 25px; background: #fff; }
+
+  .sub-options { margin-top: 20px; display: none; }
+  .sub-options.active { display: block; }
+
+  .sub-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .sub-grid-2 { grid-template-columns: 1fr 1fr; }
+
+  /* Color picker for subtitle */
+  .color-picker { display: flex; gap: 10px; margin-top: 2px; }
+  .color-chip {
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .color-chip:hover { transform: scale(1.1); }
+  .color-chip.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,60,90,0.4); }
+  .color-chip.yellow { background: #ffe033; }
+  .color-chip.white  { background: #ffffff; }
+  .color-chip.cyan   { background: #69c9d0; }
+  .color-chip.green  { background: #00e676; }
+
+  /* Position toggle */
+  .position-picker { display: flex; gap: 8px; }
+  .pos-btn {
+    flex: 1; padding: 8px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--muted); font-size: 12px; cursor: pointer;
+    text-align: center; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .pos-btn:hover { border-color: var(--muted); color: var(--text); }
+  .pos-btn.selected { background: rgba(255,60,90,0.1); border-color: rgba(255,60,90,0.5); color: var(--accent); }
+
+  .whisper-notice {
+    margin-top: 14px; padding: 12px 16px;
+    background: rgba(255,140,0,0.08); border: 1px solid rgba(255,140,0,0.2);
+    border-radius: 10px; font-size: 12px; color: #ffb347;
+    font-family: 'JetBrains Mono', monospace; line-height: 1.6;
+    display: none;
+  }
+  .whisper-notice.show { display: block; }
+
+  /* Process button */
+  .btn-process {
+    width: 100%; margin-top: 24px; padding: 16px;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 14px; font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 8px 32px rgba(255,60,90,0.3);
+  }
+  .btn-process:hover:not(:disabled) {
+    background: #ff1a3a; transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(255,60,90,0.5);
+  }
+  .btn-process:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Progress */
+  #progress-section { display: none; margin-bottom: 20px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .progress-title { font-size: 14px; font-weight: 600; }
+  .progress-pct { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--accent); }
+  .progress-bar-bg { background: var(--bg); border-radius: 999px; height: 6px; overflow: hidden; margin-bottom: 12px; }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px; transition: width 0.5s ease; width: 0%;
+    box-shadow: 0 0 12px rgba(255,60,90,0.6);
+  }
+  .progress-steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .step-pill {
+    padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+    transition: all 0.3s;
+  }
+  .step-pill.active { background: rgba(255,60,90,0.15); border-color: rgba(255,60,90,0.4); color: var(--accent); }
+  .step-pill.done   { background: rgba(0,230,118,0.1); border-color: rgba(0,230,118,0.3); color: var(--green); }
+  .progress-msg { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 7px; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+
+  /* Video info */
+  #video-info { display: none; margin-bottom: 20px; }
+  .video-info-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 22px; display: flex; gap: 18px; align-items: center;
+  }
+  .video-thumb { width: 120px; height: 67px; border-radius: 10px; object-fit: cover; background: var(--border); flex-shrink: 0; }
+  .video-meta h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .meta-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 4px 10px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 999px; font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+  }
+  .pill.hot { color: var(--accent); border-color: rgba(255,60,90,0.3); }
+  .pill.ai  { color: var(--tiktok); border-color: rgba(105,201,208,0.3); }
+
+  /* Heatmap */
+  #heatmap-section { display: none; margin-bottom: 20px; }
+  #heatmap-canvas { width: 100%; height: 70px; border-radius: 10px; overflow: hidden; display: block; }
+
+  /* Clips */
+  #clips-section { display: none; margin-bottom: 40px; }
+  .clips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; }
+  .clip-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .clip-card:hover { transform: translateY(-4px); border-color: rgba(255,60,90,0.4); }
+  .clip-header {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .clip-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; line-height: 1; }
+  .clip-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .clip-score-badge {
+    background: rgba(255,255,255,0.2); padding: 3px 9px; border-radius: 999px;
+    font-size: 11px; color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+  }
+  .sub-badge {
+    background: rgba(0,0,0,0.25); padding: 3px 9px; border-radius: 999px;
+    font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 600;
+  }
+  .clip-body { padding: 16px 20px; }
+  .clip-time { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--tiktok); margin-bottom: 6px; }
+  .clip-info { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .clip-actions { display: flex; flex-direction: column; gap: 8px; }
+  .btn-dl {
+    display: block; width: 100%; padding: 11px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; text-align: center;
+    cursor: pointer; transition: all 0.2s; text-decoration: none; letter-spacing: 0.3px;
+  }
+  .btn-dl-mp4 {
+    background: rgba(105,201,208,0.12); border: 1px solid rgba(105,201,208,0.3); color: var(--tiktok);
+  }
+  .btn-dl-mp4:hover { background: rgba(105,201,208,0.22); }
+  .btn-dl-srt {
+    background: rgba(255,224,51,0.08); border: 1px solid rgba(255,224,51,0.25); color: var(--sub-yellow);
+    font-size: 12px; padding: 8px;
+  }
+  .btn-dl-srt:hover { background: rgba(255,224,51,0.15); }
+
+  /* Error */
+  #error-section { display: none; margin-bottom: 20px; }
+  .error-card {
+    background: rgba(255,60,90,0.08); border: 1px solid rgba(255,60,90,0.3);
+    border-radius: 16px; padding: 20px 24px; color: var(--accent);
+    font-size: 13px; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; line-height: 1.6;
+  }
+
+  /* Warning banner */
+  .warning-banner {
+    background: rgba(255,140,0,0.08); border: 1px solid rgba(255,140,0,0.22);
+    border-radius: 12px; padding: 12px 18px; font-size: 12px; color: #ffb347;
+    margin-bottom: 20px; line-height: 1.6;
+  }
+
+  footer { text-align: center; padding: 28px 0; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-mark">🎬</div>
+    <div class="logo-text">
+      <h1>ViralClipper</h1>
+      <p>YouTube Most Replayed → TikTok Clips + Auto Subtitle AI</p>
+    </div>
+    <div class="badge">TikTok Ready</div>
+  </header>
+
+  <div class="warning-banner">
+    ⚠️ Tool ini untuk tujuan edukasi/personal. Menggunakan konten orang lain dapat melanggar ToS YouTube & hak cipta. Gunakan dengan tanggung jawab.
+  </div>
+
+  <!-- ── Input Card ── -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Setup Video</div>
+
+    <label class="field-label">URL Video YouTube</label>
+    <input type="text" class="url-input" id="url-input"
+      placeholder="https://www.youtube.com/watch?v=..." />
+
+    <div class="options-row">
+      <div>
+        <label class="field-label">Durasi Clip</label>
+        <div class="range-wrap">
+          <input type="range" id="clip-duration" min="15" max="180" value="60" step="5"
+            oninput="document.getElementById('dur-val').textContent=this.value+'s'" />
+          <span class="range-val" id="dur-val">60s</span>
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Jumlah Clip</label>
+        <select id="top-n">
+          <option value="1">1 clip</option>
+          <option value="2">2 clips</option>
+          <option value="3" selected>3 clips</option>
+          <option value="5">5 clips</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Subtitle Card ── -->
+  <div class="card">
+    <div class="sub-toggle-row">
+      <div class="sub-toggle-label">
+        <span>🤖 Auto Subtitle AI</span>
+        <span class="sub-badge-ai">Whisper AI</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="sub-toggle" onchange="toggleSubOptions(this.checked)" />
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:6px;">
+      Transkripsi suara otomatis lalu di-burn ke video. Mendukung 99+ bahasa.
+    </p>
+
+    <div class="sub-options" id="sub-options">
+      <div class="sub-grid" style="margin-top:18px;">
+        <div>
+          <label class="field-label">Bahasa</label>
+          <select id="sub-lang">
+            <option value="auto">🌐 Auto Detect</option>
+            <option value="id">🇮🇩 Indonesia</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ja">🇯🇵 Japanese</option>
+            <option value="ko">🇰🇷 Korean</option>
+            <option value="zh">🇨🇳 Chinese</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="fr">🇫🇷 French</option>
+            <option value="ar">🇸🇦 Arabic</option>
+            <option value="hi">🇮🇳 Hindi</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Model Whisper</label>
+          <select id="sub-model">
+            <option value="tiny">⚡ Tiny (cepat)</option>
+            <option value="small" selected>🎯 Small (rekomendasi)</option>
+            <option value="medium">🔬 Medium (akurat)</option>
+            <option value="large-v3">💎 Large-v3 (terbaik)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Posisi Subtitle</label>
+          <div class="position-picker" id="pos-picker">
+            <div class="pos-btn" data-pos="top" onclick="selectPos(this)">▲ Atas</div>
+            <div class="pos-btn selected" data-pos="bottom" onclick="selectPos(this)">▼ Bawah</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label class="field-label">Warna Teks</label>
+        <div class="color-picker" id="color-picker">
+          <div class="color-chip yellow selected" data-color="yellow" onclick="selectColor(this)" title="Kuning"></div>
+          <div class="color-chip white" data-color="white" onclick="selectColor(this)" title="Putih"></div>
+          <div class="color-chip cyan" data-color="cyan" onclick="selectColor(this)" title="Cyan"></div>
+          <div class="color-chip green" data-color="green" onclick="selectColor(this)" title="Hijau"></div>
+        </div>
+      </div>
+
+      <div id="whisper-notice" class="whisper-notice">
+        ⚠️  <strong>faster-whisper tidak terdeteksi.</strong><br>
+        Install dengan: <code>pip install faster-whisper</code><br>
+        Lalu restart server.
+      </div>
+    </div>
+
+    <button class="btn-process" id="btn-process" onclick="startProcess()">
+      🔥 PROSES SEKARANG
+    </button>
+  </div>
+
+  <!-- ── Progress ── -->
+  <div id="progress-section">
+    <div class="card">
+      <div class="progress-header">
+        <span class="progress-title"><span class="status-dot"></span><span id="progress-label">Memproses...</span></span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar"></div></div>
+      <div class="progress-steps" id="progress-steps">
+        <span class="step-pill" data-step="fetching">📡 Fetch Info</span>
+        <span class="step-pill" data-step="analyzing">🔍 Analisis</span>
+        <span class="step-pill" data-step="downloading">⬇ Download</span>
+        <span class="step-pill" data-step="clipping">✂️ Clip</span>
+        <span class="step-pill" data-step="transcribing_prep transcribing">🤖 Whisper AI</span>
+        <span class="step-pill" data-step="done">✅ Selesai</span>
+      </div>
+      <div class="progress-msg" id="progress-msg">Memulai...</div>
+    </div>
+  </div>
+
+  <!-- ── Error ── -->
+  <div id="error-section">
+    <div class="error-card" id="error-msg"></div>
+  </div>
+
+  <!-- ── Video Info ── -->
+  <div id="video-info">
+    <div class="video-info-card">
+      <img class="video-thumb" id="video-thumb" src="" alt="thumb" />
+      <div class="video-meta">
+        <h3 id="video-title">-</h3>
+        <div class="meta-pills">
+          <span class="pill" id="video-duration">-</span>
+          <span class="pill hot" id="heat-count">-</span>
+          <span class="pill ai" id="sub-status" style="display:none">🤖 Subtitle aktif</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Heatmap ── -->
+  <div id="heatmap-section">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Most Replayed Heatmap</div>
+      <canvas id="heatmap-canvas" height="70"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Clips ── -->
+  <div id="clips-section">
+    <div class="card-title" style="margin-bottom:14px;"><span class="dot"></span> Clips Siap Didownload</div>
+    <div class="clips-grid" id="clips-grid"></div>
+  </div>
+
+  <footer>ViralClipper — yt-dlp + ffmpeg + Whisper AI | Untuk penggunaan personal</footer>
+</div>
+
+<script>
+let pollInterval = null;
+let currentStatus = null;
+let whisperAvailable = false;
+
+// Check whisper on load
+fetch('/api/whisper_status').then(r=>r.json()).then(d=>{
+  whisperAvailable = d.available;
+  if (!d.available) {
+    document.getElementById('whisper-notice').classList.add('show');
+  }
+}).catch(()=>{});
+
+function fmtTime(s) {
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+function toggleSubOptions(on) {
+  document.getElementById('sub-options').classList.toggle('active', on);
+  if (on && !whisperAvailable) {
+    document.getElementById('whisper-notice').classList.add('show');
+  }
+}
+
+function selectColor(el) {
+  document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectPos(el) {
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function getSubtitleOpts() {
+  const enabled = document.getElementById('sub-toggle').checked;
+  if (!enabled) return { enabled: false };
+  return {
+    enabled: true,
+    language: document.getElementById('sub-lang').value,
+    model: document.getElementById('sub-model').value,
+    color: document.querySelector('.color-chip.selected')?.dataset.color || 'yellow',
+    position: document.querySelector('.pos-btn.selected')?.dataset.pos || 'bottom',
+  };
+}
+
+async function startProcess() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) { alert('Masukkan URL YouTube dulu!'); return; }
+
+  const subOpts = getSubtitleOpts();
+  if (subOpts.enabled && !whisperAvailable) {
+    if (!confirm('faster-whisper tidak terdeteksi. Lanjut tanpa subtitle?')) return;
+    subOpts.enabled = false;
+  }
+
+  // Reset UI
+  ['progress-section','video-info','heatmap-section','clips-section'].forEach(id =>
+    document.getElementById(id).style.display = id === 'progress-section' ? 'block' : 'none');
+  document.getElementById('error-section').style.display = 'none';
+  document.getElementById('btn-process').disabled = true;
+  document.getElementById('clips-grid').innerHTML = '';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.querySelectorAll('.step-pill').forEach(p => p.classList.remove('active','done'));
+
+  if (subOpts.enabled) {
+    document.getElementById('sub-status').style.display = 'inline';
+  }
+
+  try {
+    const res = await fetch('/api/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        clip_duration: parseInt(document.getElementById('clip-duration').value),
+        top_n: parseInt(document.getElementById('top-n').value),
+        subtitle: subOpts,
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    pollStatus(data.job_id);
+  } catch (e) { showError(e.message); }
+}
+
+const STEP_ORDER = ['fetching','analyzing','downloading','clipping','transcribing_prep','transcribing','done'];
+
+function updateStepPills(status) {
+  const pills = document.querySelectorAll('.step-pill');
+  pills.forEach(pill => {
+    const steps = pill.dataset.step.split(' ');
+    const idx = STEP_ORDER.findIndex(s => steps.includes(s));
+    const cur = STEP_ORDER.indexOf(status);
+    if (steps.includes(status)) {
+      pill.classList.add('active'); pill.classList.remove('done');
+    } else if (idx !== -1 && idx < cur) {
+      pill.classList.add('done'); pill.classList.remove('active');
+    } else {
+      pill.classList.remove('active','done');
+    }
+  });
+}
+
+function pollStatus(jobId) {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/status/${jobId}`);
+      const job = await res.json();
+      updateUI(job);
+      if (job.status === 'done' || job.status === 'error') {
+        clearInterval(pollInterval);
+        document.getElementById('btn-process').disabled = false;
+        document.querySelector('[data-step="fetching"]').closest('#progress-section');
+      }
+    } catch (e) {
+      clearInterval(pollInterval);
+      showError(e.message);
+    }
+  }, 1200);
+}
+
+const STATUS_LABELS = {
+  fetching: '📡 Mengambil Info Video',
+  analyzing: '🔍 Analisis Most Replayed',
+  downloading: '⬇ Mendownload Video',
+  clipping: '✂️ Memotong Clips',
+  transcribing_prep: '🎤 Mengekstrak Audio',
+  transcribing: '🤖 Whisper AI Transkripsi',
+  done: '✅ Selesai',
+  error: '❌ Error',
+};
+
+function updateUI(job) {
+  document.getElementById('progress-bar').style.width = job.progress + '%';
+  document.getElementById('progress-pct').textContent = job.progress + '%';
+  document.getElementById('progress-msg').textContent = job.message || '';
+  document.getElementById('progress-label').textContent = STATUS_LABELS[job.status] || job.status;
+  updateStepPills(job.status);
+
+  if (job.title) {
+    document.getElementById('video-info').style.display = 'block';
+    document.getElementById('video-title').textContent = job.title;
+    document.getElementById('video-thumb').src = job.thumbnail || '';
+    document.getElementById('video-duration').textContent = '⏱ ' + fmtTime(job.duration || 0);
+    if (job.heatmap !== undefined) {
+      document.getElementById('heat-count').textContent =
+        job.heatmap?.length > 0 ? `🔥 ${job.heatmap.length} data points` : '⚠ No heatmap';
+    }
+  }
+
+  if (job.heatmap?.length > 0 && job.duration) {
+    document.getElementById('heatmap-section').style.display = 'block';
+    drawHeatmap(job.heatmap, job.duration, job.segments || []);
+  }
+
+  if (job.clips?.length > 0) {
+    document.getElementById('clips-section').style.display = 'block';
+    const grid = document.getElementById('clips-grid');
+    grid.innerHTML = '';
+    job.clips.forEach(clip => {
+      const hasSub = clip.has_subtitle;
+      grid.innerHTML += `
+        <div class="clip-card">
+          <div class="clip-header">
+            <span class="clip-num">CLIP ${clip.index}</span>
+            <div class="clip-badges">
+              <span class="clip-score-badge">🔥 ${(clip.score*100).toFixed(0)}%</span>
+              ${hasSub ? '<span class="sub-badge">🤖 CC</span>' : ''}
+            </div>
+          </div>
+          <div class="clip-body">
+            <div class="clip-time">${fmtTime(clip.start)} → ${fmtTime(clip.end)}</div>
+            <div class="clip-info">${clip.duration.toFixed(0)}s &nbsp;•&nbsp; ${clip.size_mb} MB${hasSub ? ' &nbsp;•&nbsp; 📝 subtitle' : ''}</div>
+            <div class="clip-actions">
+              <a class="btn-dl btn-dl-mp4" href="${clip.download_url}" download>
+                ⬇ Download MP4 (TikTok)
+              </a>
+              ${hasSub && clip.srt_url ? `<a class="btn-dl btn-dl-srt" href="${clip.srt_url}" download>📄 Download SRT</a>` : ''}
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  if (job.status === 'error') showError(job.error || 'Terjadi kesalahan');
+}
+
+function drawHeatmap(heatmap, duration, segments) {
+  const canvas = document.getElementById('heatmap-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 800, H = 70;
+  canvas.width = W; canvas.height = H;
+  const maxVal = Math.max(...heatmap.map(h=>h.value||0), 0.01);
+
+  heatmap.forEach(h => {
+    const x1 = (h.start_time/duration)*W;
+    const x2 = ((h.end_time||h.start_time+5)/duration)*W;
+    const v = (h.value||0)/maxVal;
+    ctx.fillStyle = `rgba(${Math.floor(255*v)},${Math.floor(60*(1-v))},${Math.floor(90*(1-v))},${0.2+v*0.8})`;
+    ctx.fillRect(x1, H-(v*H*0.8+4), x2-x1+1, v*H*0.8+4);
+  });
+
+  segments.forEach((seg,i) => {
+    const x = (seg.start/duration)*W, w = ((seg.end-seg.start)/duration)*W;
+    ctx.fillStyle = 'rgba(105,201,208,0.12)';
+    ctx.fillRect(x,0,w,H);
+    ctx.strokeStyle = 'rgba(105,201,208,0.8)';
+    ctx.lineWidth = 2; ctx.strokeRect(x,2,w,H-4);
+    ctx.fillStyle='rgba(105,201,208,0.9)';
+    ctx.font='bold 11px JetBrains Mono,monospace';
+    ctx.fillText(`C${i+1}`,x+4,16);
+  });
+}
+
+function showError(msg) {
+  document.getElementById('progress-section').style.display = 'none';
+  document.getElementById('error-section').style.display = 'block';
+  document.getElementById('error-msg').textContent = '❌ ' + msg;
+  document.getElementById('btn-process').disabled = false;
+}
+</script>
+</body>
+</html>
