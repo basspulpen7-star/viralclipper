@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: viralclipper
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: UPLOAD_DIR
+        value: /tmp/clips
+      - key: MAX_CLIP_DURATION
+        value: 90
+      - key: JOB_TTL
+        value: 3600
